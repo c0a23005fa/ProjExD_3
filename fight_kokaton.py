@@ -126,25 +126,26 @@ class Bomb:
         引数1 color：爆弾円の色タプル
         引数2 rad：爆弾円の半径
         """
-        self.img = pg.Surface((2*rad, 2*rad))
-        pg.draw.circle(self.img, color, (rad, rad), rad)
-        self.img.set_colorkey((0, 0, 0))
-        self.rct = self.img.get_rect()
+        self.img = pg.Surface((2*rad, 2*rad))  # 爆弾円のサイズを設定
+        pg.draw.circle(self.img, color, (rad, rad), rad)  # 爆弾円を描画
+        self.img.set_colorkey((0, 0, 0))  # 黒い部分を透明に設定
+        self.rct = self.img.get_rect()  # 矩形領域を取得
+        # 爆弾の初期位置をランダムに設定
         self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-        self.vx, self.vy = +5, +5
+        self.vx, self.vy = +5, +5  # 爆弾の移動速度を設定
 
     def update(self, screen: pg.Surface):
         """
         爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
         """
-        yoko, tate = check_bound(self.rct)
-        if not yoko:
+        yoko, tate = check_bound(self.rct)  # 画面内判定
+        if not yoko:  # 横方向にはみ出した場合、速度を反転
             self.vx *= -1
-        if not tate:
+        if not tate:  # 縦方向にはみ出した場合、速度を反転
             self.vy *= -1
-        self.rct.move_ip(self.vx, self.vy)
-        screen.blit(self.img, self.rct)
+        self.rct.move_ip(self.vx, self.vy)  # 爆弾を移動
+        screen.blit(self.img, self.rct)  # 爆弾を画面に描画
 
 
 class Score:
@@ -152,12 +153,12 @@ class Score:
     打ち落とした爆弾の数を表示するスコアクラス
     """
     def __init__(self):
-        self.score = 0
-        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
-        self.color = (0, 0, 255)
-        self.img = self.fonto.render(f"Score: {self.score}", 0, self.color)
-        self.rect = self.img.get_rect()
-        self.rect.center = (100, HEIGHT - 50)
+        self.score = 0  # 初期スコア
+        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)  # スコア表示用フォントを設定
+        self.color = (0, 0, 255)  # スコア文字の色
+        self.img = self.fonto.render(f"Score: {self.score}", 0, self.color)  # 初期スコアを描画
+        self.rect = self.img.get_rect()  # 矩形領域を取得
+        self.rect.center = (100, HEIGHT - 50)  # スコアの表示位置を設定
 
     def increase(self):
         """
@@ -222,26 +223,27 @@ def main():
                 beams.append(Beam(bird))  # スペースキー押下でBeamインスタンス生成，リストにappend
         screen.blit(bg_img, [0, 0])
         
+        # 爆弾とこうかとんの衝突判定
         for bomb in bombs:
-            if bird.rct.colliderect(bomb.rct):
-                bird.change_img(8, screen)
-                fonto = pg.font.Font(None, 80)
-                txt = fonto.render("GAME OVER", True, (255, 0, 0))
-                screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
-                pg.display.update()
-                time.sleep(1)
-                return
+            if bird.rct.colliderect(bomb.rct):  # 衝突が検出された場合
+                bird.change_img(8, screen)  # こうかとんの画像を変更
+                font = pg.font.Font(None, 80)  # ゲームオーバーのフォントを設定
+                txt = font.render("GAME OVER", True, (255, 0, 0))  # ゲームオーバーの文字列を生成
+                screen.blit(txt, [WIDTH // 2 - 150, HEIGHT // 2])  # 文字列を画面中央に描画
+                pg.display.update()  # 画面を更新
+                time.sleep(1)  # 1秒待機
+                return  # ゲーム終了
 
-        for i, bomb in enumerate(bombs):
-            for beam in beams:
-                if beam is not None and bomb is not None:
-                    if beam.rct.colliderect(bomb.rct):
-                        beams.remove(beam)
-                        bombs[i] = None
-                        bird.change_img(6, screen)
-                        score.increase()
-                        explosions.append(Explosion(bomb.rct.center))
-                        pg.display.update()
+        # 爆弾とビームの衝突判定
+        for i, bomb in enumerate(bombs):  # 爆弾リストをループ
+            for beam in beams:  # ビームリストをループ
+                if beam is not None and bomb is not None:  # 両方が有効
+                    if beam.rct.colliderect(bomb.rct):  # 衝突が検出された場合
+                        beams.remove(beam)  # ビームを削除
+                        bombs[i] = None  # 爆弾を削除
+                        bird.change_img(6, screen)  # こうかとんの画像を変更
+                        score.increase()  # スコアを加算
+                        explosions.append(Explosion(bomb.rct.center))  # 爆発エフェクトを追加
         
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
